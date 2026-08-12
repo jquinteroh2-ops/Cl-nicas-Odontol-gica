@@ -14,6 +14,8 @@ export type Capacidad =
   | 'ver_agenda_clinica'
   | 'ver_agenda_propia'
   | 'resolver_solicitudes'
+  /** Crear una cita ya confirmada, sin pasar por el circuito de solicitud. */
+  | 'agendar_directo'
   | 'registrar_asistencia'
   | 'gestionar_pacientes'
   | 'notas_clinicas'
@@ -28,6 +30,7 @@ export const CAPACIDADES_POR_ROL: Record<Rol, Capacidad[]> = {
     'solicitar_cita',
     'ver_agenda_clinica',
     'resolver_solicitudes',
+    'agendar_directo',
     'registrar_asistencia',
     'gestionar_pacientes',
     'registrar_pagos',
@@ -36,6 +39,7 @@ export const CAPACIDADES_POR_ROL: Record<Rol, Capacidad[]> = {
     'solicitar_cita',
     'ver_agenda_propia',
     'resolver_solicitudes',
+    'agendar_directo',
     'registrar_asistencia',
     'gestionar_pacientes',
     'notas_clinicas',
@@ -45,6 +49,7 @@ export const CAPACIDADES_POR_ROL: Record<Rol, Capacidad[]> = {
     'ver_agenda_clinica',
     'ver_agenda_propia',
     'resolver_solicitudes',
+    'agendar_directo',
     'registrar_asistencia',
     'gestionar_pacientes',
     'notas_clinicas',
@@ -61,6 +66,7 @@ export const ETIQUETA_CAPACIDAD: Record<Capacidad, string> = {
   ver_agenda_clinica: 'Ver agenda completa de la clínica',
   ver_agenda_propia: 'Ver su propia agenda',
   resolver_solicitudes: 'Aprobar y reagendar solicitudes',
+  agendar_directo: 'Agendar una cita directamente',
   registrar_asistencia: 'Registrar asistencia',
   gestionar_pacientes: 'Crear y editar pacientes',
   notas_clinicas: 'Notas clínicas del tratamiento',

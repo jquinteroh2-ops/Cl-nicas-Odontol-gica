@@ -8,8 +8,13 @@
  * consultan los permisos del usuario.
  */
 
+import { useState } from 'react';
+import { CalendarPlus } from 'lucide-react';
 import { useUsuario } from '@compartido/auth';
 import { formatoFechaConDia } from '@compartido/formato';
+import { puede } from '@compartido/permisos';
+import Boton from '@componentes/ui/Boton';
+import NuevaCita from '@clinica/agenda/NuevaCita';
 import RejillaIndicadores from '@clinica/panel/RejillaIndicadores';
 import BandejaSolicitudes from '@clinica/panel/BandejaSolicitudes';
 import AgendaDeHoy from '@clinica/panel/AgendaDeHoy';
@@ -26,20 +31,38 @@ function saludo(): string {
 export default function PanelClinica() {
   const usuario = useUsuario();
   const primerNombre = (usuario?.nombre ?? '').replace(/^(Dra?\.|Sra?\.)\s*/i, '').split(' ')[0];
+  const [agendando, setAgendando] = useState(false);
 
   return (
     <div className="space-y-10">
-      <header>
-        <p className="rotulo">{formatoFechaConDia(new Date())}</p>
-        <h1 className="mt-2 text-3xl font-semibold tracking-tight text-slate-900">
-          {saludo()}, {primerNombre}
-        </h1>
+      {/*
+        Agendar a mano también vive aquí, no solo en la agenda: cuando entra una
+        llamada, el panel es la pantalla que ya está abierta.
+      */}
+      <header className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <p className="rotulo">{formatoFechaConDia(new Date())}</p>
+          <h1 className="mt-2 text-3xl font-semibold tracking-tight text-slate-900">
+            {saludo()}, {primerNombre}
+          </h1>
+        </div>
+
+        {puede(usuario, 'agendar_directo') && (
+          <Boton
+            alPulsar={() => setAgendando(true)}
+            icono={<CalendarPlus className="h-5 w-5" aria-hidden />}
+          >
+            Nueva cita
+          </Boton>
+        )}
       </header>
 
       <RejillaIndicadores />
       <BandejaSolicitudes />
       <AgendaDeHoy />
       <AlertasSeguimiento />
+
+      {agendando && <NuevaCita alCerrar={() => setAgendando(false)} />}
     </div>
   );
 }

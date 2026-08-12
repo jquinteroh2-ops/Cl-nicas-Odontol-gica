@@ -8,13 +8,14 @@
  */
 
 import { useEffect } from 'react';
-import { CalendarDays, LogOut, RefreshCw, Wallet } from 'lucide-react';
+import { CalendarDays, CalendarPlus, LogOut, RefreshCw, Wallet } from 'lucide-react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useUsuario } from '@compartido/auth';
 import { AVISO_DEMO, CLINICA } from '@compartido/clinica';
 import { useDatos } from '@compartido/contexto';
 import { iniciales } from '@compartido/formato';
 import * as api from '@compartido/mockApi';
+import Boton from '@componentes/ui/Boton';
 
 const PESTANAS = [
   { a: '/portal', etiqueta: 'Mis citas', icono: CalendarDays },
@@ -70,17 +71,36 @@ export default function LayoutPaciente() {
           </button>
         </div>
 
-        <div className="mx-auto flex max-w-3xl items-center gap-4 px-6 pb-10 pt-3">
-          <span
-            className="grid h-14 w-14 shrink-0 place-items-center rounded-full bg-white/15 text-lg font-semibold ring-1 ring-white/20"
-            aria-hidden
-          >
-            {iniciales(nombre)}
-          </span>
-          <div className="min-w-0">
-            <p className="truncate text-3xl font-semibold tracking-tight">Hola, {primerNombre}</p>
-            <p className="mt-0.5 text-sm text-white/65">Este es tu portal de paciente</p>
+        <div className="mx-auto max-w-3xl px-6 pb-8 pt-3">
+          <div className="flex items-center gap-4">
+            <span
+              className="grid h-14 w-14 shrink-0 place-items-center rounded-full bg-white/15 text-lg font-semibold ring-1 ring-white/20"
+              aria-hidden
+            >
+              {iniciales(nombre)}
+            </span>
+            <div className="min-w-0">
+              <p className="truncate text-3xl font-semibold tracking-tight">Hola, {primerNombre}</p>
+              <p className="mt-0.5 text-sm text-white/65">Este es tu portal de paciente</p>
+            </div>
           </div>
+
+          {/*
+            Pedir cita vive en el marco, no dentro de una pantalla: antes solo
+            aparecía en el estado vacío, así que una paciente que ya tenía una
+            cita agendada no encontraba por dónde pedir la siguiente. Es la
+            acción principal del portal y tiene que estar siempre a la vista.
+          */}
+          <Boton
+            a="/agendar"
+            variante="claro"
+            tamano="lg"
+            anchoCompleto
+            className="mt-6 sm:w-auto"
+            icono={<CalendarPlus className="h-5 w-5" aria-hidden />}
+          >
+            Pedir cita
+          </Boton>
         </div>
       </header>
 

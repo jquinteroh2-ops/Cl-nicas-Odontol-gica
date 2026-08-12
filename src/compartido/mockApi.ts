@@ -17,6 +17,7 @@ import type {
   CredencialesPaciente,
   CredencialesPersonal,
   Cuota,
+  DatosContacto,
   EntradaSolicitud,
   EstadoDemo,
   FranjaDisponible,
@@ -44,7 +45,7 @@ import {
 } from './disponibilidad';
 import { DIAS_SIN_CONTROL_ALERTA, HORAS_PARA_EXPIRAR } from './datosSemilla';
 import { destinatarioDe, redactarMensaje } from './mensajeria';
-import { nombreCompleto } from './formato';
+import { ETIQUETA_TIPO_CITA, nombreCompleto } from './formato';
 
 /** Error de dominio con mensaje listo para mostrar. */
 export class ErrorApi extends Error {
@@ -884,6 +885,142 @@ export async function rechazarSolicitud(
 }
 
 /* ====================================================================== citas == */
+
+export interface EntradaCitaDirecta {
+  /** Paciente que ya está en la clínica. */
+  pacienteId?: string;
+  /** Paciente que todavía no existe: se registra al agendar. */
+  datosContacto?: DatosContacto;
+  tipo: TipoCita;
+  /** ISO 8601 */
+  fechaHora: string;
+  /** Si se omite, se asigna el profesional de cabecera o el primero libre. */
+  profesionalId?: string;
+  motivoConsulta?: string;
+}
+
+export interface ResultadoCitaDirecta {
+  cita: Cita;
+  paciente: Paciente;
+  /** Confirmación redactada y registrada, lista para enviar por WhatsApp. */
+  notificacion: Notificacion;
+}
+
+/**
+ * La clínica agenda a mano, sin pasar por el circuito de solicitud.
+ *
+ * Es el caso más frecuente del mostrador: alguien escribe por WhatsApp o llama,
+ * y quien atiende lo mete en la agenda en el momento. No hay nada que aprobar
+ * —la decisión ya la tomó la clínica—, así que la cita nace confirmada.
+ *
+ * Aun así se guarda también la solicitud, ya resuelta: `Cita.solicitudId` es
+ * obligatorio y, sobre todo, así toda cita tiene el mismo rastro venga del
+ * portal o del mostrador, y la bitácora se lee igual en los dos casos.
+ */
+export async function crearCitaDirecta(entrada: EntradaCitaDirecta): Promise<ResultadoCitaDirecta> {
+  await retardo();
+  expirarVencidas();
+
+  const inicio = parseISO(entrada.fechaHora);
+  const duracion = DURACION_POR_TIPO[entrada.tipo];
+  const estadoPrevio = obtenerEstado();
+
+  // Se revalida la franja: pudo ocuparse desde otra pestaña mientras se llenaba
+  // el formulario. Es la misma comprobación que hace el portal del paciente.
+  const preferido = entrada.profesionalId ?? profesionalDeCabecera(estadoPrevio, entrada.pacienteId);
+  const libres = profesionalesLibres(estadoPrevio, inicio, duracion, preferido);
+  if (libres.length === 0) {
+    throw new ErrorApi('Ese horario acaba de ocuparse. Elige otro, por favor.', 'franja_ocupada');
+  }
+  if (entrada.profesionalId && !libres.includes(entrada.profesionalId)) {
+    throw new ErrorApi('Ese profesional ya tiene una cita a esa hora.', 'franja_ocupada');
+  }
+  const asignado = entrada.profesionalId ?? libres[0];
+
+  // Paciente nuevo: se registra ahora, igual que al aprobar una solicitud suya.
+  let pacienteNuevo: Paciente | undefined;
+  let usuarioNuevo: Usuario | undefined;
+  let pacienteId = entrada.pacienteId;
+
+  if (!pacienteId) {
+    if (!entrada.datosContacto) throw new ErrorApi('Falta indicar de quién es la cita.');
+    pacienteNuevo = {
+      id: nuevoId('pac'),
+      nombres: entrada.datosContacto.nombres,
+      apellidos: entrada.datosContacto.apellidos,
+      tipoDocumento: entrada.datosContacto.tipoDocumento,
+      numeroDocumento: entrada.datosContacto.numeroDocumento,
+      telefono: entrada.datosContacto.telefono,
+      fechaNacimiento: '',
+      acudiente: entrada.datosContacto.acudiente,
+      codigoAcceso: String(Math.floor(1000 + Math.random() * 9000)),
+    };
+    usuarioNuevo = {
+      id: nuevoId('usr'),
+      nombre: nombreCompleto(pacienteNuevo),
+      rol: 'paciente',
+      pacienteId: pacienteNuevo.id,
+      activo: true,
+    };
+    pacienteId = pacienteNuevo.id;
+  }
+
+  const paciente = pacienteNuevo ?? estadoPrevio.pacientes.find((p) => p.id === pacienteId);
+  if (!paciente) throw new ErrorApi('No encontramos el paciente.', 'no_encontrado');
+
+  const actor = actorActual();
+  const ahora = new Date().toISOString();
+
+  const solicitud: SolicitudCita = {
+    id: nuevoId('sol'),
+    pacienteId,
+    profesionalId: asignado,
+    fechaHoraSolicitada: entrada.fechaHora,
+    duracionMinutos: duracion,
+    tipo: entrada.tipo,
+    estado: 'confirmada',
+    motivoConsulta: entrada.motivoConsulta?.trim() || undefined,
+    creadaEn: ahora,
+    resueltaEn: ahora,
+    resueltaPor: actor.id,
+    requiereAprobacion: false,
+  };
+
+  const cita: Cita = {
+    id: nuevoId('cit'),
+    solicitudId: solicitud.id,
+    pacienteId,
+    profesionalId: asignado,
+    fechaHora: entrada.fechaHora,
+    duracionMinutos: duracion,
+    tipo: entrada.tipo,
+    estado: 'confirmada',
+  };
+
+  const notificacion = componerNotificacion('confirmada', {
+    paciente,
+    solicitud,
+    cita,
+    profesional: estadoPrevio.profesionales.find((p) => p.id === asignado),
+  });
+
+  actualizarEstado((estado) => ({
+    ...estado,
+    pacientes: pacienteNuevo ? [...estado.pacientes, pacienteNuevo] : estado.pacientes,
+    usuarios: usuarioNuevo ? [...estado.usuarios, usuarioNuevo] : estado.usuarios,
+    solicitudes: [...estado.solicitudes, solicitud],
+    citas: [...estado.citas, cita],
+    notificaciones: [...estado.notificaciones, notificacion],
+    bitacora: conBitacora(
+      estado,
+      actor,
+      pacienteNuevo ? 'Agendó cita y registró paciente' : 'Agendó cita',
+      `${nombreCompleto(paciente)} · ${ETIQUETA_TIPO_CITA[entrada.tipo].toLowerCase()}`,
+    ),
+  }));
+
+  return { cita, paciente, notificacion };
+}
 
 /** "Confirmar asistencia" del portal. No es lo mismo que marcar que asistió. */
 export async function confirmarAsistencia(citaId: string): Promise<Cita> {

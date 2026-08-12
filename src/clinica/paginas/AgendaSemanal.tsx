@@ -10,17 +10,19 @@
 import { useMemo, useState } from 'react';
 import { addDays, addWeeks, format, isSameDay, isToday, startOfWeek, subWeeks } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { CalendarPlus, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useUsuario } from '@compartido/auth';
 import { useConsulta } from '@compartido/contexto';
 import { claveDia } from '@compartido/disponibilidad';
 import { profesionalVisible, puede } from '@compartido/permisos';
 import * as api from '@compartido/mockApi';
+import Boton from '@componentes/ui/Boton';
 import Esqueleto from '@componentes/ui/Esqueleto';
 import Tarjeta from '@componentes/ui/Tarjeta';
 import RejillaSemana from '@clinica/agenda/RejillaSemana';
 import ListaDia from '@clinica/agenda/ListaDia';
 import DetalleCita from '@clinica/agenda/DetalleCita';
+import NuevaCita from '@clinica/agenda/NuevaCita';
 import type { CitaConContexto } from '@clinica/agenda/tipos';
 
 /** Lunes a sábado. El domingo no se dibuja porque la clínica cierra. */
@@ -38,6 +40,8 @@ export default function AgendaSemanal() {
   const [diaMovil, setDiaMovil] = useState(() => claveDia(new Date()));
   const [filtro, setFiltro] = useState<string | null>(null);
   const [abierta, setAbierta] = useState<CitaConContexto | null>(null);
+  const [agendando, setAgendando] = useState(false);
+  const puedeAgendar = puede(usuario, 'agendar_directo');
 
   const dias = useMemo(() => diasDeLaSemana(referencia), [referencia]);
   const profesionalConsultado = forzado ?? filtro;
@@ -81,11 +85,22 @@ export default function AgendaSemanal() {
 
   return (
     <div className="space-y-6">
-      <header>
-        <p className="rotulo">Agenda</p>
-        <h1 className="mt-2 text-3xl font-semibold tracking-tight text-slate-900">
-          Semana del {rango}
-        </h1>
+      <header className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <p className="rotulo">Agenda</p>
+          <h1 className="mt-2 text-3xl font-semibold tracking-tight text-slate-900">
+            Semana del {rango}
+          </h1>
+        </div>
+
+        {puedeAgendar && (
+          <Boton
+            alPulsar={() => setAgendando(true)}
+            icono={<CalendarPlus className="h-5 w-5" aria-hidden />}
+          >
+            Nueva cita
+          </Boton>
+        )}
       </header>
 
       <div className="flex flex-wrap items-center gap-2">
@@ -208,6 +223,7 @@ export default function AgendaSemanal() {
       )}
 
       {abierta && <DetalleCita entrada={abierta} alCerrar={() => setAbierta(null)} />}
+      {agendando && <NuevaCita alCerrar={() => setAgendando(false)} />}
     </div>
   );
 }

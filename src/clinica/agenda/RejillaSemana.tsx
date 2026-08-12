@@ -12,7 +12,14 @@ import { format, isSameDay, isToday } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { ETIQUETA_TIPO_CITA, formatoHora, nombreCompleto } from '@compartido/formato';
 import { jornadaDe } from '@compartido/disponibilidad';
-import { ALTO_HORA, HORA_APERTURA, HORA_CIERRE, posicionDe, type CitaConContexto } from './tipos';
+import {
+  ALTO_HORA,
+  HORA_APERTURA,
+  HORA_CIERRE,
+  posicionDe,
+  repartirEnColumnas,
+  type CitaConContexto,
+} from './tipos';
 
 const HORAS = Array.from({ length: HORA_CIERRE - HORA_APERTURA }, (_, i) => HORA_APERTURA + i);
 
@@ -85,7 +92,7 @@ export default function RejillaSemana({ dias, citas, alAbrirCita }: Props) {
                   );
                 })}
 
-                {citasDelDia.map((entrada) => {
+                {repartirEnColumnas(citasDelDia).map(({ entrada, columna, columnas }) => {
                   const { cita, paciente, profesional } = entrada;
                   const inicio = new Date(cita.fechaHora);
                   const { top, alto } = posicionDe(inicio, cita.duracionMinutos);
@@ -99,11 +106,14 @@ export default function RejillaSemana({ dias, citas, alAbrirCita }: Props) {
                       style={{
                         top,
                         height: alto,
+                        // Cada cita ocupa su columna dentro del grupo solapado.
+                        left: `calc(${(columna / columnas) * 100}% + 2px)`,
+                        width: `calc(${100 / columnas}% - 4px)`,
                         borderLeftColor: color,
                         // Fondo del mismo tono, muy lavado: identifica sin gritar.
                         backgroundColor: `${color}14`,
                       }}
-                      className={`absolute inset-x-1 overflow-hidden rounded-lg border-l-[3px] px-2 py-1 text-left transition-all hover:brightness-95 ${
+                      className={`absolute overflow-hidden rounded-lg border-l-[3px] px-2 py-1 text-left transition-all hover:brightness-95 ${
                         cita.estado === 'no_asistio' ? 'opacity-50 line-through' : ''
                       }`}
                     >

@@ -42,6 +42,16 @@ export function destinatarioDe(paciente: Paciente): Destinatario {
 
 const primerNombre = (nombre: string) => nombre.trim().split(/\s+/)[0];
 
+/**
+ * Baja solo la inicial, para encajar una frase en mitad de otra.
+ *
+ * `toLowerCase()` sobre el texto entero se comía los nombres propios: la
+ * referencia de la clínica es "…antes de llegar al Éxito" —el supermercado— y
+ * salía "al éxito", que se lee como otra cosa. Con los motivos de rechazo, que
+ * los escribe a mano quien atiende, pasaba igual con cualquier ciudad o nombre.
+ */
+const inicialEnMinuscula = (texto: string) => texto.charAt(0).toLowerCase() + texto.slice(1);
+
 /** Artículo de cada tipo de cita: "la valoración", "el control de ortodoncia". */
 const ARTICULO_TIPO_CITA: Record<TipoCita, 'el' | 'la'> = {
   valoracion: 'la',
@@ -87,7 +97,7 @@ export function redactarMensaje(tipo: TipoNotificacion, contexto: ContextoMensaj
   const de = (articulo: 'el' | 'la', sustantivo: string) =>
     frase(articulo, sustantivo, paciente, destinatario);
   const conProfesional = profesional ? ` con ${profesional.nombre}` : '';
-  const direccion = `${CLINICA.direccion}, ${CLINICA.referencia.toLowerCase()}`;
+  const direccion = `${CLINICA.direccion}, ${inicialEnMinuscula(CLINICA.referencia)}`;
 
   switch (tipo) {
     case 'confirmada': {
@@ -122,7 +132,7 @@ export function redactarMensaje(tipo: TipoNotificacion, contexto: ContextoMensaj
     case 'rechazada':
       return (
         `${hola}, gracias por escribirnos a ${CLINICA.nombre}. ` +
-        `Esta vez no pudimos agendar ${de('la', 'cita')}${motivoRechazo ? `: ${motivoRechazo.toLowerCase()}` : '.'} ` +
+        `Esta vez no pudimos agendar ${de('la', 'cita')}${motivoRechazo ? `: ${inicialEnMinuscula(motivoRechazo)}` : '.'} ` +
         `Escríbenos por aquí y con gusto buscamos una fecha que te sirva.`
       );
 

@@ -16,17 +16,27 @@ import { aFecha, formatoFecha, formatoHora } from '@compartido/formato';
 import * as api from '@compartido/mockApi';
 import Esqueleto, { EsqueletoFranjas } from '@componentes/ui/Esqueleto';
 
-const MAXIMO = 2;
-
 interface Props {
   tipo: TipoCita;
   pacienteId?: string;
-  /** ISO 8601, como máximo dos. */
+  /** ISO 8601. Nunca más de `maximo` elementos. */
   seleccion: string[];
   alCambiar: (horarios: string[]) => void;
+  /**
+   * Cuántas horas se pueden elegir. Dos para contraproponerle al paciente, una
+   * cuando el mostrador está agendando directamente.
+   */
+  maximo?: number;
 }
 
-export default function SelectorHorarios({ tipo, pacienteId, seleccion, alCambiar }: Props) {
+export default function SelectorHorarios({
+  tipo,
+  pacienteId,
+  seleccion,
+  alCambiar,
+  maximo = 2,
+}: Props) {
+  const unaSola = maximo === 1;
   const [diaActivo, setDiaActivo] = useState<string | null>(null);
 
   // Dos meses: una solicitud de fin de mes no puede quedarse sin alternativas.
@@ -52,8 +62,9 @@ export default function SelectorHorarios({ tipo, pacienteId, seleccion, alCambia
       alCambiar(seleccion.filter((h) => h !== inicio));
       return;
     }
-    // Al llegar al tope, la nueva desplaza a la más antigua en vez de no hacer nada.
-    alCambiar(seleccion.length < MAXIMO ? [...seleccion, inicio] : [...seleccion.slice(1), inicio]);
+    // Al llegar al tope, la nueva desplaza a la más antigua en vez de no hacer
+    // nada. Con `maximo` 1 eso equivale a sustituir la elección anterior.
+    alCambiar(seleccion.length < maximo ? [...seleccion, inicio] : [...seleccion.slice(1), inicio]);
   }
 
   if (consultaDias.cargando) {
@@ -143,10 +154,12 @@ export default function SelectorHorarios({ tipo, pacienteId, seleccion, alCambia
       </div>
 
       <div className="mt-5 rounded-2xl bg-slate-50 px-4 py-3 ring-1 ring-slate-200/70">
-        <p className="rotulo">Se le ofrecerán</p>
+        <p className="rotulo">{unaSola ? 'Hora elegida' : 'Se le ofrecerán'}</p>
         {seleccion.length === 0 ? (
           <p className="mt-1.5 text-sm text-slate-500">
-            Elige {MAXIMO} horarios. Aún no has escogido ninguno.
+            {unaSola
+              ? 'Toca una hora libre para agendarla.'
+              : `Elige ${maximo} horarios. Aún no has escogido ninguno.`}
           </p>
         ) : (
           <ol className="mt-2 space-y-1.5">
@@ -154,7 +167,8 @@ export default function SelectorHorarios({ tipo, pacienteId, seleccion, alCambia
               .sort()
               .map((horario, indice) => (
                 <li key={horario} className="flex items-baseline gap-2 text-sm text-slate-700">
-                  <span className="font-semibold text-petroleo-700">{indice + 1}.</span>
+                  {/* El número solo tiene sentido cuando se ofrece a elegir entre varias. */}
+                  {!unaSola && <span className="font-semibold text-petroleo-700">{indice + 1}.</span>}
                   <span>
                     {formatoFecha(horario)} · {formatoHora(horario)}
                   </span>
