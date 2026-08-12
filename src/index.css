@@ -1,0 +1,175 @@
+@import 'tailwindcss';
+
+/**
+ * Lenguaje visual: sobrio, con aire.
+ *
+ * Casi todo se define redefiniendo tokens que Tailwind ya usa —la rampa neutra,
+ * la escala tipográfica, los radios— en vez de inventar nombres nuevos. Así una
+ * pantalla escrita con `text-sm`, `slate-500` o `rounded-2xl` adopta el estilo
+ * nuevo sin que haya que tocar una sola de sus clases.
+ */
+@theme {
+  /* Acento institucional: azul petróleo. */
+  --color-petroleo-50: #f2fafa;
+  --color-petroleo-100: #d9f0f1;
+  --color-petroleo-200: #b3e0e3;
+  --color-petroleo-300: #7fc9cf;
+  --color-petroleo-400: #47aab4;
+  --color-petroleo-500: #1f8b97;
+  --color-petroleo-600: #0f6e78;
+  --color-petroleo-700: #0e5861;
+  --color-petroleo-800: #10474e;
+  --color-petroleo-900: #123b41;
+  --color-petroleo-950: #062429;
+
+  /*
+   * Neutros. Se sobrescribe la rampa `slate` de Tailwind en lugar de crear una
+   * paleta aparte: el gris de fábrica tira a azul y compite con el petróleo.
+   * Este tiene un matiz verde-cian mínimo, que lo acompaña en vez de pelearse
+   * con él, y un extremo oscuro cálido para que el texto no se vea tiznado.
+   */
+  --color-slate-50: #f7f9f9;
+  --color-slate-100: #eff3f3;
+  --color-slate-200: #e0e6e6;
+  --color-slate-300: #c8d1d1;
+  --color-slate-400: #9ba6a6;
+  --color-slate-500: #737e7e;
+  --color-slate-600: #58625f;
+  --color-slate-700: #454e4d;
+  --color-slate-800: #2e3635;
+  --color-slate-900: #1d2423;
+  --color-slate-950: #111716;
+
+  /*
+   * Tipografía un punto más grande que la de fábrica. El demo se ve en un
+   * celular y a un brazo de distancia de otra persona: 14 px se leen apretados.
+   */
+  --text-xs: 0.8125rem;
+  --text-xs--line-height: 1.15rem;
+  --text-sm: 0.9375rem;
+  --text-sm--line-height: 1.45rem;
+  --text-base: 1.0625rem;
+  --text-base--line-height: 1.65rem;
+  --text-lg: 1.1875rem;
+  --text-lg--line-height: 1.75rem;
+  --text-xl: 1.375rem;
+  --text-xl--line-height: 1.9rem;
+  --text-2xl: 1.625rem;
+  --text-2xl--line-height: 2.15rem;
+  --text-3xl: 2rem;
+  --text-3xl--line-height: 2.4rem;
+  --text-4xl: 2.5rem;
+  --text-4xl--line-height: 2.85rem;
+
+  /* Radios más amplios: la esquina blanda es la mitad de la sensación de app cuidada. */
+  --radius-lg: 0.625rem;
+  --radius-xl: 0.875rem;
+  --radius-2xl: 1.25rem;
+  --radius-3xl: 1.75rem;
+
+  /*
+   * Sombras tintadas con el verde-petróleo del texto, nunca negro puro: el negro
+   * sobre fondo claro ensucia y delata el degradado.
+   */
+  --shadow-suave: 0 1px 2px -1px rgb(17 23 22 / 0.06), 0 2px 8px -2px rgb(17 23 22 / 0.05);
+  --shadow-media: 0 2px 4px -2px rgb(17 23 22 / 0.06), 0 8px 20px -6px rgb(17 23 22 / 0.08);
+  --shadow-alta: 0 4px 8px -4px rgb(17 23 22 / 0.08), 0 20px 40px -12px rgb(17 23 22 / 0.14);
+
+  --font-sans:
+    system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif;
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    @apply bg-white text-slate-800 antialiased;
+    font-family: var(--font-sans);
+  }
+
+  /*
+   * Los títulos van con tracking negativo y peso semibold, no bold: a tamaño
+   * grande el bold se ve tosco y el texto apretado se ve más caro.
+   */
+  h1,
+  h2,
+  h3 {
+    @apply tracking-tight;
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  /* Ningún control interactivo por debajo del umbral táctil. */
+  button,
+  a[role='button'] {
+    min-height: 44px;
+  }
+
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-petroleo-600;
+  }
+}
+
+@layer utilities {
+  /* Respiro para el notch y la barra inferior del celular. */
+  .pb-seguro {
+    padding-bottom: max(1.5rem, env(safe-area-inset-bottom));
+  }
+
+  /*
+   * Rótulo de sección: versalita ancha y tenue sobre el título. Es el recurso
+   * que más aporta a la jerarquía sin gastar espacio.
+   */
+  .rotulo {
+    @apply text-xs font-semibold uppercase tracking-[0.14em] text-slate-400;
+  }
+
+  /* Cifra de indicador: tabular para que no bailen los dígitos al actualizarse. */
+  .cifra {
+    @apply text-3xl font-semibold tracking-tight text-slate-900;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .animar-entrada {
+    animation: entrada 240ms ease-out both;
+  }
+
+  .animar-pulso-suave {
+    animation: pulso-suave 1.6s ease-in-out infinite;
+  }
+}
+
+@keyframes entrada {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes pulso-suave {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
