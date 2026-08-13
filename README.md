@@ -6,9 +6,11 @@ y administrador.
 
 ## Qué hace
 
-**Área pública** — Portada, agendamiento en cuatro pasos (tipo de cita, fecha,
-datos y confirmación) e ingreso de pacientes y de personal. Solo se ofrecen
-horarios realmente libres: pedir una cita imposible y que la rechacen es la peor
+**Área pública** — Portada de una sola página con siete secciones enlazadas
+desde el menú (inicio, nosotros, servicios, cifras, actualidad, llamada a la
+acción y contacto), agendamiento en cuatro pasos (tipo de cita, fecha, datos y
+confirmación) e ingreso de pacientes y de personal. Solo se ofrecen horarios
+realmente libres: pedir una cita imposible y que la rechacen es la peor
 experiencia posible.
 
 **Portal del paciente** — Próxima cita, calendario mensual del tratamiento,
@@ -45,6 +47,7 @@ src/
   compartido/    tipos, permisos, formato, mensajería y la capa de datos
   componentes/   componentes de interfaz reutilizables y la guarda de rutas
   publico/       portada, agendamiento e ingreso
+    animacion/   revelados al hacer scroll, contadores, parallax y máquina de escribir
   paciente/      portal del paciente
   clinica/       panel, agenda y bandeja de solicitudes
 ```
@@ -67,6 +70,12 @@ recargar.
 redefine la rampa de grises, la escala tipográfica y los radios que Tailwind ya
 usa, así que una pantalla escrita con `text-sm` o `slate-500` adopta el estilo
 sin tocar ni una de sus clases.
+
+**Las animaciones no dependen de ninguna librería.** El estado escondido y la
+transición del revelado viven en `index.css`; `publico/animacion/` solo observa
+cuándo un bloque entra en pantalla y marca un atributo. Todo respeta
+`prefers-reduced-motion`: quien tenga el sistema configurado así ve la página
+entera, quieta.
 
 ## Estado actual: esto todavía no es software de producción
 

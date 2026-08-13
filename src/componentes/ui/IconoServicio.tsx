@@ -7,12 +7,17 @@
 
 import {
   AlignHorizontalDistributeCenter,
+  CalendarCheck,
+  Clock,
   HeartPulse,
   Layers,
+  MessageCircle,
+  Smile,
   Sparkles,
   Sun,
   Syringe,
   Stethoscope,
+  Users,
   Wind,
   Wrench,
   type LucideProps,
@@ -28,6 +33,12 @@ const ICONOS: Record<string, ComponentType<LucideProps>> = {
   Syringe,
   Wrench,
   Sun,
+  // Cifras y actualidad. Las marcas de redes las dibuja `IconoRed`.
+  CalendarCheck,
+  Clock,
+  MessageCircle,
+  Smile,
+  Users,
 };
 
 export default function IconoServicio({

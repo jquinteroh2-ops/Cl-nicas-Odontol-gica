@@ -10,10 +10,12 @@ import {
   AVISO_DEMO_DETALLE,
   CLINICA,
   DIRECCION_COMPLETA,
+  REDES,
   enlaceWhatsApp,
 } from '@compartido/clinica';
 import { formatoTelefono } from '@compartido/formato';
 import { useDatos } from '@compartido/contexto';
+import IconoRed from '@componentes/ui/IconoRed';
 
 export default function PieDePagina() {
   const { reiniciar } = useDatos();
@@ -28,6 +30,21 @@ export default function PieDePagina() {
             <p className="mt-4 text-sm text-slate-500">
               {CLINICA.aniosTrayectoria} años en Turbaco
             </p>
+
+            <div className="mt-5 flex items-center gap-2">
+              {REDES.map((red) => (
+                <a
+                  key={red.nombre}
+                  href={red.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={red.nombre}
+                  className="grid h-10 w-10 place-items-center rounded-xl bg-white text-slate-500 ring-1 ring-slate-200/70 transition-all duration-200 hover:-translate-y-0.5 hover:text-petroleo-700 hover:ring-petroleo-200"
+                >
+                  <IconoRed tipo={red.icono} className="h-4 w-4" />
+                </a>
+              ))}
+            </div>
           </div>
 
           <div>

@@ -77,11 +77,33 @@
 
   --font-sans:
     system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif;
+
+  /*
+   * Curva de las entradas. Arranca rápido y frena largo, que es como se mueve
+   * algo con peso; la `ease-out` de fábrica llega demasiado plana y el revelado
+   * se siente mecánico.
+   */
+  --ease-suave: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 @layer base {
   html {
     -webkit-text-size-adjust: 100%;
+  }
+
+  /*
+   * El menú superior navega por anclas. Sin `scroll-padding` la sección aterriza
+   * debajo de la barra fija y se pierde el título; el valor cubre su alto más un
+   * respiro. Se anula solo si el sistema pide menos movimiento.
+   */
+  html {
+    scroll-padding-top: 5.5rem;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    html {
+      scroll-behavior: smooth;
+    }
   }
 
   body {
@@ -142,6 +164,87 @@
   .animar-pulso-suave {
     animation: pulso-suave 1.6s ease-in-out infinite;
   }
+
+  /* Indicador de "sigue bajando" al pie de la portada. */
+  .animar-flotar {
+    animation: flotar 2.2s ease-in-out infinite;
+  }
+
+  /* Rueda del ratón dibujado: baja y se desvanece, en bucle. */
+  .animar-rueda {
+    animation: rueda 1.8s ease-in-out infinite;
+  }
+
+  /* Cursor del texto que se escribe solo. */
+  .animar-cursor {
+    animation: cursor 1s steps(2, start) infinite;
+  }
+
+  /*
+   * Acercamiento lentísimo de la foto de portada. A 12 segundos no se percibe
+   * como movimiento sino como que la imagen "respira"; más rápido marea.
+   */
+  .animar-acercar {
+    animation: acercar 12s var(--ease-suave) both;
+  }
+
+  /* Capa de fondo que se mueve más despacio que la página. */
+  .capa-parallax {
+    transform: translate3d(0, var(--parallax, 0px), 0);
+    will-change: transform;
+  }
+}
+
+/*
+ * Revelado al entrar en pantalla.
+ *
+ * El estado escondido vive en CSS y el componente `Revelar` solo marca
+ * `data-visible` cuando el elemento cruza el borde de la ventana. Así la
+ * animación la ejecuta el compositor —opacidad y desplazamiento, nada que
+ * obligue a recalcular el diseño— y el escalonado de una rejilla es solo un
+ * retardo distinto por tarjeta.
+ */
+[data-revelar] {
+  opacity: 0;
+  transition:
+    opacity 700ms var(--ease-suave) var(--retardo, 0ms),
+    transform 700ms var(--ease-suave) var(--retardo, 0ms);
+  will-change: opacity, transform;
+}
+
+[data-revelar='abajo'] {
+  transform: translateY(28px);
+}
+
+[data-revelar='izquierda'] {
+  transform: translateX(-32px);
+}
+
+[data-revelar='derecha'] {
+  transform: translateX(32px);
+}
+
+[data-revelar='escala'] {
+  transform: scale(0.94);
+}
+
+[data-revelar][data-visible='si'] {
+  opacity: 1;
+  transform: none;
+  will-change: auto;
+}
+
+/*
+ * Si el sistema pide menos movimiento, el contenido tiene que estar visible de
+ * todos modos: la regla global de más abajo acorta la transición, pero el estado
+ * inicial es opacidad cero y sin esto el revelado dependería de que el
+ * observador llegue a dispararse.
+ */
+@media (prefers-reduced-motion: reduce) {
+  [data-revelar] {
+    opacity: 1;
+    transform: none;
+  }
 }
 
 @keyframes entrada {
@@ -162,6 +265,49 @@
   }
   50% {
     opacity: 0.45;
+  }
+}
+
+@keyframes flotar {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(8px);
+  }
+}
+
+@keyframes rueda {
+  0% {
+    opacity: 0;
+    transform: translateY(0);
+  }
+  35% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+
+@keyframes cursor {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
+
+@keyframes acercar {
+  from {
+    transform: scale(1.12);
+  }
+  to {
+    transform: scale(1);
   }
 }
 
